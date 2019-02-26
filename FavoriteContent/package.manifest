@@ -1,0 +1,19 @@
+{
+	propertyEditors: [{
+		name: "Favorite Content",
+		alias: "FavoriteContent",
+		icon: "icon-billboard",
+		group: "media",
+		editor: {
+			view: "~/app_plugins/FavoriteContent/views/favoriteContentView.html",
+			valueType: "JSON"
+		},
+		prevalues: {}
+	}],
+	javascript: [
+		"~/app_plugins/FavoriteContent/js/favoriteContent.js"
+	],
+	css : [
+		"~/app_plugins/FavoriteContent/css/favoriteContent.css"
+	]
+}

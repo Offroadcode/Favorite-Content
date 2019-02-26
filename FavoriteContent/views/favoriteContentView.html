@@ -1,0 +1,10 @@
+<div ng-controller="favorite.content.controller" class="hello-world">
+    <div ng-repeat="prop in properties">
+        <div>
+            <div><strong>{{prop.label}}</strong></div>
+            <p>{{prop.description}}</p>
+            <umb-editor model="prop"></umb-editor>
+            <hr/>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,10 @@
+dist/
+node_modules/
+tmp/
+pkg/
+Umbraco.Test/
+.sass-cache/
+FavoriteContent/Umbraco/packages/
+FavoriteContent/Umbraco/FavoriteContent/bin/
+FavoriteContent/Umbraco/FavoriteContent/obj/
+FavoriteContent/Umbraco/.vs/
