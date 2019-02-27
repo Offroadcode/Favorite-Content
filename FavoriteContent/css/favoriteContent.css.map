@@ -1,7 +1,7 @@
 {
 "version": 3,
-"mappings": "",
-"sources": [],
+"mappings": "AACI,mBAAa,CACT,KAAK,CAAE,OAAO,CACd,MAAM,CAAE,OAAO,CACf,mDACQ,CACJ,eAAe,CAAE,IAAI,CACrB,KAAK,CAAE,OAAO,CAElB,qCAAoB,CAChB,KAAK,CAAE,OAAO",
+"sources": ["../sass/favoriteContent.scss"],
 "names": [],
 "file": "favoriteContent.css"
 }

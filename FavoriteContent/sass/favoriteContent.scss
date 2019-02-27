@@ -1,0 +1,14 @@
+.orc-fav {
+    &.fav-button {
+        color: #675e7a;
+        cursor: pointer;
+        &:hover,
+        &:focus {
+            text-decoration: none;
+            color: #33bf81;
+        }
+        &.orc-fav-favorited {
+            color: #33bf81;
+        }
+    }
+}
