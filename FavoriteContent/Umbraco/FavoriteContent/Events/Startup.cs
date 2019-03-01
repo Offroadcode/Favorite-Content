@@ -2,6 +2,7 @@
 using Umbraco.Core;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Persistence;
+using Umbraco.Core.Services;
 
 namespace FavoriteContent.Events
 {
@@ -17,6 +18,8 @@ namespace FavoriteContent.Events
             {
                 creator.CreateTable<FavoriteContentModel>(false);
             }
+
+            ContentService.Saving += SaveAndPublishEvents.UpdateFavoritePropertyInDatabase;
         }
     }
 }

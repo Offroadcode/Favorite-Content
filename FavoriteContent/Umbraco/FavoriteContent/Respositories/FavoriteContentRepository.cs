@@ -23,7 +23,7 @@ namespace FavoriteContent.Respositories
             var topProperties = new List<FavoriteContentModel>();
 
             var db = ApplicationContext.Current.DatabaseContext.Database;
-            var favoritesByUseCount = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite!='FALSE' ORDER BY UseCount DESC");
+            var favoritesByUseCount = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite IS NULL OR IsFavorite !='False' ORDER BY UseCount DESC");
 
             if (favoritesByUseCount != null && favoritesByUseCount.Any())
             {
@@ -84,23 +84,16 @@ namespace FavoriteContent.Respositories
         /// <returns>
         /// Whether or not the property was successfully added
         /// </returns>
-        public bool AddFavoriteContent(string propertyName)
+        public bool AddFavoriteContent(string propertyName, bool? setFavorite = true)
         {
             var db = ApplicationContext.Current.DatabaseContext.Database;
             var allProperties = GetAllProperties();
-
-            // Don't add the property if it's name is already in there
-            // (you shouldn't be able to do this anyway, but...
-            if (allProperties.Any(x => x.PropertyName == propertyName))
-            {
-                return false;
-            }
 
             try
             {
                 var newFavoriteContent = new FavoriteContentModel
                 {
-                    IsFavorite = true,
+                    IsFavorite = setFavorite,
                     PropertyName = propertyName,
                     UseCount = 1
                 };
@@ -113,6 +106,35 @@ namespace FavoriteContent.Respositories
             {
                 LogHelper.Error<FavoriteContentRepository>("Unable to add property" + propertyName + "to the FavoriteContent database table.", ex);
                 return false;
+            }
+        }
+
+        public bool UpdateFavoriteContent(string propertyName)
+        {
+            var db = ApplicationContext.Current.DatabaseContext.Database;
+            var allProperties = GetAllProperties();
+            
+            if (allProperties.Any(x => x.PropertyName == propertyName))
+            {
+                try
+                {
+                    var property = allProperties.FirstOrDefault(x => x.PropertyName == propertyName);
+                    var useCount = property.UseCount + 1;
+
+                    property.UseCount = useCount;
+
+                    db.Update(property);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error<FavoriteContentRepository>("Unable to update property " + propertyName + " in the FavoriteContent database table.", ex);
+                    return false;
+                }
+            }
+            else
+            {
+                return AddFavoriteContent(propertyName, null);
             }
         }
 

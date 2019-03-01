@@ -3,6 +3,9 @@ using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Results;
 using Umbraco.Web.WebApi;
+using FavoriteContent.Models;
+using System.Collections.Generic;
+using FavoriteContent.Constants;
 
 namespace FavoriteContent.Controllers.Api
 {
@@ -12,15 +15,24 @@ namespace FavoriteContent.Controllers.Api
         private readonly FavoriteContentRepository FavoriteContentRepository = new FavoriteContentRepository();
 
         [HttpGet]
-        public JsonResult<string[]> GetFavoriteProperties()
+        public JsonResult<List<FavoriteContentApiModel>> GetFavoriteProperties()
         {
-            var favorites = new string[] { };
+            var favorites = new List<FavoriteContentApiModel>();
 
             var dbFavorites = FavoriteContentRepository.GetFavoriteProperties();
+            var topProperties = FavoriteContentRepository.GetTopProperties();
 
-            favorites = dbFavorites.Select(x => x.PropertyName).ToArray();
+            favorites = dbFavorites.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite }).ToList();
 
-            return Json(favorites);
+            if (topProperties.Any())
+            {
+                var convertedTopProperties = topProperties.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite });
+                favorites.AddRange(convertedTopProperties);
+            }
+
+            favorites = favorites.Distinct().ToList();
+
+            return Json(favorites, JsonSettings.Settings);
         }
 
         [HttpGet]

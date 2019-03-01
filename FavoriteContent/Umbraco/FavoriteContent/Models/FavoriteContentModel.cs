@@ -19,6 +19,7 @@ namespace FavoriteContent.Models
         public int UseCount { get; set; }
 
         [Column("IsFavorite")]
+        [NullSetting(NullSetting = NullSettings.Null)]
         public bool? IsFavorite { get; set; }
     }
 }
