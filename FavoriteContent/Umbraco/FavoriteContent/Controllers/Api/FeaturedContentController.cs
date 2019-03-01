@@ -9,7 +9,7 @@ using FavoriteContent.Constants;
 
 namespace FavoriteContent.Controllers.Api
 {
-    public class FavoriteContentController : UmbracoApiController
+    public class FavoriteContentController : UmbracoAuthorizedApiController
     {
 
         private readonly FavoriteContentRepository FavoriteContentRepository = new FavoriteContentRepository();
