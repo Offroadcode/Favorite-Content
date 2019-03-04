@@ -22,18 +22,22 @@ module.exports = function(grunt) {
         files: ['FavoriteContent/**/*.html'],
         tasks: ['copy:html']
       },
-	  sass: {
-		files: ['FavoriteContent/**/*.scss'],
-		tasks: ['sass', 'copy:css']
-	  },
-	  css: {
-		files: ['FavoriteContent/**/*.css'],
-		tasks: ['copy:css']
-	  },
-	  manifest: {
-		files: ['FavoriteContent/package.manifest'],
-		tasks: ['copy:manifest']
-	  }
+      dll: {
+        files: ['FavoriteContent/Umbraco/FavoriteContent/**/*.cs'] ,
+        tasks: ['msbuild:dist', 'copy:dll']
+      },
+      sass: {
+      files: ['FavoriteContent/**/*.scss'],
+      tasks: ['sass', 'copy:css']
+      },
+      css: {
+      files: ['FavoriteContent/**/*.css'],
+      tasks: ['copy:css']
+      },
+      manifest: {
+      files: ['FavoriteContent/package.manifest'],
+      tasks: ['copy:manifest']
+      }
     },
 
     concat: {
@@ -49,17 +53,23 @@ module.exports = function(grunt) {
     },
 
     copy: {
-        html: {
-            cwd: 'FavoriteContent/views/',
-            src: [
-                'favoriteContentView.html'
-            ],
-            dest: '<%= basePath %>/views/',
-            expand: true,
-            rename: function(dest, src) {
-                return dest + src;
-              }
-        },
+      dll: {
+        cwd: 'FavoriteContent/Umbraco/FavoriteContent/bin/debug/',
+        src: 'FavoriteContent.dll',
+        dest: '<%= dest %>/bin/',
+        expand: true
+    },
+    html: {
+        cwd: 'FavoriteContent/views/',
+        src: [
+            'favoriteContentView.html'
+        ],
+        dest: '<%= basePath %>/views/',
+        expand: true,
+        rename: function(dest, src) {
+            return dest + src;
+          }
+    },
 		css: {
 			cwd: 'FavoriteContent/css/',
 			src: [
@@ -71,24 +81,24 @@ module.exports = function(grunt) {
 				return dest + src;
 			}
 		},
-        manifest: {
-            cwd: 'FavoriteContent/',
-            src: [
-                'package.manifest'
-            ],
-            dest: '<%= basePath %>/',
-            expand: true,
-            rename: function(dest, src) {
-                return dest + src;
-            }
-        },
-       umbraco: {
-        cwd: '<%= dest %>',
-        src: '**/*',
-        dest: 'tmp/umbraco',
-        expand: true
-      }
+    manifest: {
+        cwd: 'FavoriteContent/',
+        src: [
+            'package.manifest'
+        ],
+        dest: '<%= basePath %>/',
+        expand: true,
+        rename: function(dest, src) {
+            return dest + src;
+        }
     },
+    umbraco: {
+    cwd: '<%= dest %>',
+    src: '**/*',
+    dest: 'tmp/umbraco',
+    expand: true
+  }
+},
 
     umbracoPackage: {
         dist: {
@@ -147,6 +157,25 @@ module.exports = function(grunt) {
 		'FavoriteContent/sass/*.scss',
 		'!FavoriteContent/sass/favoriteContent.scss'
 	  ]
+  },
+    msbuild: {
+      options: {
+        stdout: true,
+        verbosity: 'quiet',
+        maxCpuCount: 4,
+        version: 4.0,
+        buildParameters: {
+          WarningLevel: 2,
+          NoWarn: 1607
+        }
+    },
+    dist: {
+        src: ['FavoriteContent/Umbraco/FavoriteContent/FavoriteContent.csproj'],
+        options: {
+            projectConfiguration: 'Debug',
+            targets: ['Clean', 'Rebuild'],
+        }
+    }
   }
   });
 
