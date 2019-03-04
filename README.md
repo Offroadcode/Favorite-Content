@@ -1,4 +1,4 @@
-# Favorite Content &middot; ![version](https://img.shields.io/badge/version-0.0.1-red.svg)
+# Favorite Content &middot; ![version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 A package to permit editors to select their favorite property editors in content pages and surface those and the most-used ones on a "favorite content" tab.
 

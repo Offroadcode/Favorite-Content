@@ -1,5 +1,5 @@
 angular.module("umbraco").controller("favorite.content.controller", 
-function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceService) {
+function($scope, $http, $timeout, editorState, contentEditingHelper) {
 
     // Initialization Methods //////////////////////////////////////////////////
 
@@ -91,12 +91,11 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
      * response.
      */
     $scope.addPropertyToFavoriteViaApi = function(alias, callback) {
-        // uncomment when API is created.
-        /*$http.get('/umbraco/api/favoriteContent/addPropertyToFavorites?property=' + alias).then(function(response) {
+        $http.get('/umbraco/backoffice/api/FavoriteContent/AddPropertyToFavorites?property=' + alias).then(function(response) {
             if (callback) {
                 callback();
             }
-        });*/
+        });
     };
 
     /**
@@ -127,15 +126,23 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
      */
     $scope.getFavoritedPropertiesFromApi = function(callback) {
         // uncomment when API is created.
-        /*$http.get('/umbraco/api/favoriteContent/getFavoritedProperties').then(function(response) {
-            $scope.favoritedProperties = response; // an array of strings
-            if (callback) {
-                callback();
-            }
-        });*/
-        // delete following mock behavior.
-        $scope.favoritedProperties = ['excerpt'];
-        callback();
+        $http.get('/umbraco/backoffice/api/FavoriteContent/GetFavoriteProperties').then(function(response) {
+            var faves = response.data;
+            var filtered = [];
+            faves.forEach(function(fave, index) {
+                var isUnique = true;
+                faves.forEach(function(compareFave, compareIndex) {
+                    if (fave.name === compareFave.name && index !== compareIndex && compareIndex < index) {
+                        isUnique = false;
+                    }
+                });
+                if (isUnique) {
+                    filtered.push(fave);
+                }
+            })
+            $scope.favoritedProperties = filtered;
+            callback();
+        });
     };
 
     $scope.isOnFavoriteTab = function() {
@@ -151,7 +158,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
     $scope.isPropFavorite = function(alias) {
         var isPropFavorite = false;
         $scope.favoritedProperties.forEach(function(prop) {
-            if (prop === alias) {
+            if (prop.name === alias) {
                 isPropFavorite = true;
             }
         });
@@ -159,12 +166,11 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
     };
 
     $scope.removePropertyFromFavoritesViaApi = function(alias, callback) {
-        // uncomment when API is created.
-        /*$http.get('/umbraco/api/favoriteContent/removePropertyFromFavorites?property=' + alias).then(function(response) {
+        $http.get('/umbraco/backoffice/api/FavoriteContent/removePropertyFromFavorites?property=' + alias).then(function(response) {
             if (callback) {
                 callback();
             }
-        });*/
+        });
     };
 
     /**
@@ -174,9 +180,9 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
      */
     $scope.syncAllPropertiesToFavoriteContent = function() {
         var props = contentEditingHelper.getAllProps(editorState.getCurrent());
-        $scope.favoritedProperties.forEach(function(alias) {
+        $scope.favoritedProperties.forEach(function(fave) {
             props.forEach(function(property) {
-                if (property.alias === alias) {
+                if (property.alias === fave.name) {
                     // Workarounds / fixes
                     property = $scope.fixTagsPropertyWorkaround(property);
                     $scope.properties.push(property);
@@ -191,7 +197,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
      * @param {number} index
      */
     $scope.syncFavoriteContentToProperty = function(index) {
-        var alias = $scope.favoritedProperties[index];
+        var alias = $scope.favoritedProperties[index].name;
         var clonedContent = editorState.getCurrent();
         clonedContent.properties.forEach(function(property) {
             if (property.alias === alias) {
@@ -220,11 +226,18 @@ function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceServ
         var isFavorited = buttonClass.indexOf('orc-fav-favorited') > -1;
 
         if (isFavorited) {
-            $scope.favoritedProperties.splice($scope.favoritedProperties.indexOf(alias), 1);
-            $scope.addPropertyToFavoriteViaApi(alias);
-        } else {
-            $scope.favoritedProperties.push(alias);
+            $scope.favoritedProperties.forEach(function(property, index) {
+                if (property.name === alias) {
+                    $scope.favoritedProperties.splice(index, 1);
+                }
+            })
             $scope.removePropertyFromFavoritesViaApi(alias);
+        } else {
+            $scope.favoritedProperties.push({
+                name: alias,
+                isFavorite: true
+            });
+            $scope.addPropertyToFavoriteViaApi(alias);
         }
 
         var clonedContent = editorState.getCurrent();
