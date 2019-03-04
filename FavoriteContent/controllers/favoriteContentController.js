@@ -1,5 +1,5 @@
 angular.module("umbraco").controller("favorite.content.controller", 
-function($scope, $http, $timeout, editorState, contentEditingHelper) {
+function($scope, $http, $timeout, editorState, contentEditingHelper, tinyMceService) {
 
     // Initialization Methods //////////////////////////////////////////////////
 
@@ -7,6 +7,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
     * Triggered on the controller loaded, kicks off any initialization functions.
 	*/
 	$scope.init = function() {
+        $scope.model.hideLabel = true;
         $scope.favoritedProperties = [];
         $scope.properties = [];
         $scope.watchers = [];
@@ -48,13 +49,17 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
      */
     $scope.bindTabChange = function() {
         $('a[data-toggle="tab"]').on('shown', function(e) {
-            $scope.properties = [];
-            $timeout(function() {
-                $scope.syncAllPropertiesToFavoriteContent();
+            if ($scope.isOnFavoriteTab()) {
+                $scope.properties = [];
                 $timeout(function() {
-                    $scope.bindOnFavoriteClick();
+                    $scope.syncAllPropertiesToFavoriteContent();
+                    $timeout(function() {
+                        $scope.bindOnFavoriteClick();
+                    }, 100);
                 }, 100);
-            }, 100);
+            } else {
+                $scope.updateRtePropertiesWorkaround();
+            }
         });
     };
 
@@ -133,6 +138,10 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         callback();
     };
 
+    $scope.isOnFavoriteTab = function() {
+        return jQuery('.umb-tab-pane.active .orc-fav-content-container').length > 0;
+    };
+
     /**
      * Returns `true` if property alias provided matches one in the array of 
      * favoritedProperties.
@@ -168,10 +177,8 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         $scope.favoritedProperties.forEach(function(alias) {
             props.forEach(function(property) {
                 if (property.alias === alias) {
-                    // Tags behavior fix.
-                    if (property.editor === 'Umbraco.Tags' && property.config.storageType === 'Csv') {
-                        property.config.storageType = 'Json';
-                    }
+                    // Workarounds / fixes
+                    property = $scope.fixTagsPropertyWorkaround(property);
                     $scope.properties.push(property);
                 }
             }.bind($scope));
@@ -201,7 +208,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         contentEditingHelper.reBindChangedProperties(editorState.getCurrent(), clonedContent);
     };
 
-    /**
+    /** 
      * Adds or removes the property with the matching alias found inside the 
      * provided button element's class attribute to `$scope.favoritedProperties`.
      * @param {Element} button - A favorite button associated with a property.
@@ -242,6 +249,33 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
             });
         });
         contentEditingHelper.reBindChangedProperties(editorState.getCurrent(), clonedContent);
+    };
+
+    // Polyfills and workarounds ///////////////////////////////////////////////
+
+    /**
+     * Fixes an issue with Json-style Tag editors (the default) being mistyped 
+     * as Csv.
+     * @param {JSON} property - The property
+     * @returns {JSON} property
+     */
+    $scope.fixTagsPropertyWorkaround = function(property) {
+        if (property.editor === 'Umbraco.Tags' && property.config.storageType === 'Csv') {
+            property.config.storageType = 'Json';
+        }
+        return property;
+    };
+
+    $scope.updateRtePropertiesWorkaround = function(property) {
+        $scope.properties.forEach(function(property) {
+            if (property.view === 'rte') {
+                tinyMCE.editors.forEach(function(editor) {
+                    if (editor.id.indexOf(property.alias) > -1) {
+                        editor.setContent(property.value);
+                    }
+                });
+            }
+        });
     };
 
 	// Call $scope.init() //////////////////////////////////////////////////////
