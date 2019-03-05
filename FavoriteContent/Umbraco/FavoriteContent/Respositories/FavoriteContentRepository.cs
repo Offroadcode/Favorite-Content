@@ -61,7 +61,7 @@ namespace FavoriteContent.Respositories
 
             var propertiesByUser = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE UserId =" + userId + "");
 
-            if(propertiesByUser != null && propertiesByUser.Any())
+            if (propertiesByUser != null && propertiesByUser.Any())
             {
                 userProperties.AddRange(propertiesByUser);
             }
@@ -78,7 +78,7 @@ namespace FavoriteContent.Respositories
         public IEnumerable<FavoriteContentModel> GetAllProperties()
         {
             var allProperties = new List<FavoriteContentModel>();
-            
+
             var properties = db.Query<FavoriteContentModel>("SELECT * FROM FavoriteContent");
 
             if (properties != null && properties.Any())
@@ -124,10 +124,10 @@ namespace FavoriteContent.Respositories
             }
         }
 
-        public bool UpdateFavoriteContent(string propertyName, int userId)
+        public bool UpdateFavoriteContent(string propertyName, int userId, int? sortOrder = null)
         {
             var userProperties = GetAllPropertiesByUser(userId);
-            
+
             if (userProperties.Any(x => x.PropertyName == propertyName))
             {
                 try
@@ -139,7 +139,11 @@ namespace FavoriteContent.Respositories
                     property.UseCount = useCount;
                     property.LastUpdated = DateTime.UtcNow;
 
-                    if(property.IsFavorite.HasValue && !property.IsFavorite.Value)
+                    if (sortOrder.HasValue)
+                    {
+                        property.SortOrder = sortOrder.Value;
+                    }
+                    else if (property.IsFavorite.HasValue && !property.IsFavorite.Value)
                     {
                         property.SortOrder = favoriteProperties.Count();
                     }

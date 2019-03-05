@@ -44,6 +44,13 @@ namespace FavoriteContent.Controllers.Api
         }
 
         [HttpGet]
+        public bool UpdatePropertySortOrder(string property, int sortOrder)
+        {
+            var user = UmbracoContext.Security.CurrentUser;
+            return FavoriteContentRepository.UpdateFavoriteContent(property, user.Id, sortOrder);
+        }
+
+        [HttpGet]
         public bool RemovePropertyFromFavorites(string property)
         {
             var user = UmbracoContext.Security.CurrentUser;
