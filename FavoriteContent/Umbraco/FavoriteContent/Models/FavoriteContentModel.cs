@@ -1,4 +1,5 @@
-﻿using Umbraco.Core.Persistence;
+﻿using System;
+using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.DatabaseAnnotations;
 
 namespace FavoriteContent.Models
@@ -24,5 +25,11 @@ namespace FavoriteContent.Models
 
         [Column("UserId")]
         public int UserId { get; set; }
+
+        [Column("SortOrder")]
+        public int SortOrder { get; set; }
+
+        [Column("LastUpdated")]
+        public DateTime LastUpdated { get; set; }
     }
 }
