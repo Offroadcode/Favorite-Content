@@ -3,6 +3,7 @@ using Umbraco.Core;
 using Umbraco.Core.Events;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
+using Umbraco.Web;
 
 namespace FavoriteContent.Events
 {
@@ -19,7 +20,8 @@ namespace FavoriteContent.Events
                 {
                     if (property.IsDirty() && property.PropertyType.PropertyEditorAlias != "Umbraco.Grid")
                     {
-                        var favoriteContent = FavoriteContentRepository.UpdateFavoriteContent(property.Alias);
+                        var user = UmbracoContext.Current.Security.CurrentUser;
+                        var favoriteContent = FavoriteContentRepository.UpdateFavoriteContent(property.Alias, user.Id);
                     }
                 }
             }

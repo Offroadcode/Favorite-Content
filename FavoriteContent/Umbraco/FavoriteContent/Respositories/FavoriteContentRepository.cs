@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Core;
 using Umbraco.Core.Logging;
+using Umbraco.Core.Persistence;
 
 namespace FavoriteContent.Respositories
 {
     public class FavoriteContentRepository
     {
+        private readonly UmbracoDatabase db = ApplicationContext.Current.DatabaseContext.Database;
+
         /// <summary>
         /// Gets the most used properties from the database
         /// </summary>
@@ -18,12 +21,11 @@ namespace FavoriteContent.Respositories
         /// <returns>
         /// A list of top properties that have not been removed from the favorites
         /// </returns>
-        public IEnumerable<FavoriteContentModel> GetTopProperties(int count = 5)
+        public IEnumerable<FavoriteContentModel> GetTopProperties(int userId, int count = 5)
         {
             var topProperties = new List<FavoriteContentModel>();
 
-            var db = ApplicationContext.Current.DatabaseContext.Database;
-            var favoritesByUseCount = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite IS NULL OR IsFavorite !='False' ORDER BY UseCount DESC");
+            var favoritesByUseCount = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite IS NULL AND UserId =" + userId + " OR IsFavorite !='False' ORDER BY UseCount DESC");
 
             if (favoritesByUseCount != null && favoritesByUseCount.Any())
             {
@@ -39,12 +41,11 @@ namespace FavoriteContent.Respositories
         /// <returns>
         /// A list of properties that have been specifically favorited
         /// </returns>
-        public IEnumerable<FavoriteContentModel> GetFavoriteProperties()
+        public IEnumerable<FavoriteContentModel> GetFavoriteProperties(int userId)
         {
             var favoriteProperties = new List<FavoriteContentModel>();
 
-            var db = ApplicationContext.Current.DatabaseContext.Database;
-            var favorites = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite='TRUE'");
+            var favorites = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE IsFavorite='TRUE' AND UserId=" + userId + "");
 
             if (favorites != null && favorites.Any())
             {
@@ -52,6 +53,20 @@ namespace FavoriteContent.Respositories
             }
 
             return favoriteProperties;
+        }
+
+        public IEnumerable<FavoriteContentModel> GetAllPropertiesByUser(int userId)
+        {
+            var userProperties = new List<FavoriteContentModel>();
+
+            var propertiesByUser = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE UserId =" + userId + "");
+
+            if(propertiesByUser != null && propertiesByUser.Any())
+            {
+                userProperties.AddRange(propertiesByUser);
+            }
+
+            return userProperties;
         }
 
         /// <summary>
@@ -63,8 +78,7 @@ namespace FavoriteContent.Respositories
         public IEnumerable<FavoriteContentModel> GetAllProperties()
         {
             var allProperties = new List<FavoriteContentModel>();
-
-            var db = ApplicationContext.Current.DatabaseContext.Database;
+            
             var properties = db.Query<FavoriteContentModel>("SELECT * FROM FavoriteContent");
 
             if (properties != null && properties.Any())
@@ -84,9 +98,8 @@ namespace FavoriteContent.Respositories
         /// <returns>
         /// Whether or not the property was successfully added
         /// </returns>
-        public bool AddFavoriteContent(string propertyName, bool? setFavorite = true)
+        public bool AddFavoriteContent(string propertyName, int userId, bool? setFavorite = true)
         {
-            var db = ApplicationContext.Current.DatabaseContext.Database;
             var allProperties = GetAllProperties();
 
             try
@@ -95,7 +108,8 @@ namespace FavoriteContent.Respositories
                 {
                     IsFavorite = setFavorite,
                     PropertyName = propertyName,
-                    UseCount = 1
+                    UseCount = 1,
+                    UserId = userId
                 };
 
                 db.Insert(newFavoriteContent);
@@ -109,16 +123,15 @@ namespace FavoriteContent.Respositories
             }
         }
 
-        public bool UpdateFavoriteContent(string propertyName)
+        public bool UpdateFavoriteContent(string propertyName, int userId)
         {
-            var db = ApplicationContext.Current.DatabaseContext.Database;
-            var allProperties = GetAllProperties();
+            var userProperties = GetAllPropertiesByUser(userId);
             
-            if (allProperties.Any(x => x.PropertyName == propertyName))
+            if (userProperties.Any(x => x.PropertyName == propertyName))
             {
                 try
                 {
-                    var property = allProperties.FirstOrDefault(x => x.PropertyName == propertyName);
+                    var property = userProperties.FirstOrDefault(x => x.PropertyName == propertyName);
                     var useCount = property.UseCount + 1;
 
                     property.UseCount = useCount;
@@ -134,7 +147,7 @@ namespace FavoriteContent.Respositories
             }
             else
             {
-                return AddFavoriteContent(propertyName, null);
+                return AddFavoriteContent(propertyName, userId, null);
             }
         }
 
@@ -147,13 +160,11 @@ namespace FavoriteContent.Respositories
         /// <returns>
         /// Whether or not the property was successfully removed
         /// </returns>
-        public bool RemoveFavoriteContent(string propertyName)
+        public bool RemoveFavoriteContent(string propertyName, int userId)
         {
-            var db = ApplicationContext.Current.DatabaseContext.Database;
-
             try
             {
-                var favorite = db.Query<FavoriteContentModel>("SELECT * FROM [FavoriteContent] WHERE PropertyName='" + propertyName + "'").FirstOrDefault();
+                var favorite = GetAllPropertiesByUser(userId).FirstOrDefault();
                 if (favorite != null)
                 {
                     favorite.IsFavorite = false;

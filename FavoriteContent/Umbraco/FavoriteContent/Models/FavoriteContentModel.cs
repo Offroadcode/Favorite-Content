@@ -21,5 +21,8 @@ namespace FavoriteContent.Models
         [Column("IsFavorite")]
         [NullSetting(NullSetting = NullSettings.Null)]
         public bool? IsFavorite { get; set; }
+
+        [Column("UserId")]
+        public int UserId { get; set; }
     }
 }
