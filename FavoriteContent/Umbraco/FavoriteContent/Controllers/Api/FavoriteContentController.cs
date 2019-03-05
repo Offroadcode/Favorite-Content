@@ -23,11 +23,11 @@ namespace FavoriteContent.Controllers.Api
             var dbFavorites = FavoriteContentRepository.GetFavoriteProperties(user.Id);
             var topProperties = FavoriteContentRepository.GetTopProperties(user.Id);
 
-            favorites = dbFavorites.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite }).ToList();
+            favorites = dbFavorites.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite, SortOrder = x.SortOrder }).ToList();
 
             if (topProperties.Any())
             {
-                var convertedTopProperties = topProperties.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite });
+                var convertedTopProperties = topProperties.Select(x => new FavoriteContentApiModel { Name = x.PropertyName, IsFavorite = x.IsFavorite, SortOrder = x.SortOrder });
                 favorites.AddRange(convertedTopProperties);
             }
 
@@ -41,6 +41,13 @@ namespace FavoriteContent.Controllers.Api
         {
             var user = UmbracoContext.Security.CurrentUser;
             return FavoriteContentRepository.AddFavoriteContent(property, user.Id);
+        }
+
+        [HttpGet]
+        public bool UpdatePropertySortOrder(string property, int sortOrder)
+        {
+            var user = UmbracoContext.Security.CurrentUser;
+            return FavoriteContentRepository.UpdateFavoriteContent(property, user.Id, sortOrder);
         }
 
         [HttpGet]
