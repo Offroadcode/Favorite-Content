@@ -100,16 +100,17 @@ namespace FavoriteContent.Respositories
         /// </returns>
         public bool AddFavoriteContent(string propertyName, int userId, bool? setFavorite = true)
         {
-            var allProperties = GetAllProperties();
-
             try
             {
+                var favoriteProperties = GetAllPropertiesByUser(userId).Where(x => !x.IsFavorite.HasValue || x.IsFavorite.Value);
                 var newFavoriteContent = new FavoriteContentModel
                 {
                     IsFavorite = setFavorite,
                     PropertyName = propertyName,
                     UseCount = 1,
-                    UserId = userId
+                    UserId = userId,
+                    SortOrder = favoriteProperties == null ? 0 : favoriteProperties.Count(),
+                    LastUpdated = DateTime.UtcNow
                 };
 
                 db.Insert(newFavoriteContent);
@@ -131,10 +132,17 @@ namespace FavoriteContent.Respositories
             {
                 try
                 {
+                    var favoriteProperties = userProperties.Where(x => !x.IsFavorite.HasValue || x.IsFavorite.Value);
                     var property = userProperties.FirstOrDefault(x => x.PropertyName == propertyName);
                     var useCount = property.UseCount + 1;
 
                     property.UseCount = useCount;
+                    property.LastUpdated = DateTime.UtcNow;
+
+                    if(property.IsFavorite.HasValue && !property.IsFavorite.Value)
+                    {
+                        property.SortOrder = favoriteProperties.Count();
+                    }
 
                     db.Update(property);
                     return true;
@@ -168,6 +176,8 @@ namespace FavoriteContent.Respositories
                 if (favorite != null)
                 {
                     favorite.IsFavorite = false;
+                    favorite.LastUpdated = DateTime.UtcNow;
+                    favorite.SortOrder = -1;
 
                     db.Update(favorite);
                     return true;
