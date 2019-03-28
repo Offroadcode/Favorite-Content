@@ -8,7 +8,28 @@
 			view: "~/app_plugins/FavoriteContent/views/favoriteContentView.html",
 			valueType: "JSON"
 		},
-		prevalues: {}
+		prevalues: {
+            fields: [
+                {
+                    label: "Only Favorite Listed Editor Views",
+                    description: "When active, only listed property editors with matching views that either are listed or aren't listed (depending on whitelist toggle) can be favorited.",
+                    key: "filterByList",
+                    view: "boolean"
+                },
+                {
+                    label: "Use Blacklist",
+                    description: "If 'Only Favorite Listed Editor Views' is selected, then when this is selected the list below acts as a blacklist. By default, when unselected, it acts like a whitelist.",
+                    key: "useBlacklist",
+                    view: "boolean"
+                }, 
+                {
+                    label: "Permitted Editor Views",
+                    key: "permittedEditorViews",
+                    description: "A comma separated list of valid property editor views (such as 'textarea') to permit favoriting on, if 'Only Favorite Listed Editor Types' is set to true. Acts like a whitelist by default, but behaves like a blacklist if 'Use Blacklist' is true.",
+                    view: "textarea"
+                }
+            ]
+        }
 	}],
 	javascript: [
 		"~/app_plugins/FavoriteContent/js/favoriteContent.js"

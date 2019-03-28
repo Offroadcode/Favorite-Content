@@ -22,7 +22,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         });
     };
 
-    // Event Handler Methods ///////////////////////////////////////////////////
+    // Event Handler Methods /s//////////////////////////////////////////////////
 
     /**
      * Binds the favorite buttons' click event to allow the toggling of the 
@@ -49,7 +49,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
      */
     $scope.bindTabChange = function() {
         $('a[data-toggle="tab"]').on('shown', function(e) {
-            if ($scope.isOnFavoriteTab()) {
+            if ($scope.isOnFavoriteTab()) { 
                 $scope.properties = [];
                 $timeout(function() {
                     $scope.syncAllPropertiesToFavoriteContent();
@@ -80,7 +80,19 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
             });
             $scope.watchers.push(watcher);
         });
-    }
+    };
+
+    $scope.onSortUpClick = function(event, prop) {
+        event.preventDefault();
+        console.info('up');
+        console.info(prop);
+        /*/FavoriteContent/UpdatePropertySortOrder?property=NAME&sortOrder=NUMBER*/
+    };
+
+    $scope.onSortDownClick = function(event) {
+        event.preventDefault();
+        console.info('down'); 
+    };
 
     // Helper Methods //////////////////////////////////////////////////////////
 
@@ -105,18 +117,40 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
     $scope.addFavoriteButtons = function() {
         var clonedContent = editorState.getCurrent();
         clonedContent.properties.forEach(function(property) {
-            var buttonClass = 'orc-fav fav-button' + ($scope.isPropFavorite(property.alias) ? ' orc-fav-favorited': '') + ' alias--' + property.alias + '--';
-            var buttonHtml = '<a class="' + buttonClass + '"><i class="icon-favorite" style="font-size: 1em"></i></a><span> </span>';
-            property.description = buttonHtml + (property.description ? property.description : '');
-        });
-        clonedContent.tabs.forEach(function(tab) {
-            tab.properties.forEach(function(property) {
+            if ($scope.doesPropPassFilter(property.view)) {
                 var buttonClass = 'orc-fav fav-button' + ($scope.isPropFavorite(property.alias) ? ' orc-fav-favorited': '') + ' alias--' + property.alias + '--';
-                var buttonHtml = '<a class="' + buttonClass + '"><i class="icon-favorite" style="font-size: 1em"></i></a><span> </span>';                
+                var buttonHtml = '<a class="' + buttonClass + '"><i class="icon-favorite" style="font-size: 1em"></i></a><span> </span>';
                 property.description = buttonHtml + (property.description ? property.description : '');
-            });
+            }
         });
+        if (clonedContent && clonedContent.tabs) {
+            clonedContent.tabs.forEach(function(tab) {
+                tab.properties.forEach(function(property) {
+                    if ($scope.doesPropPassFilter(property.view)) {
+                        var buttonClass = 'orc-fav fav-button' + ($scope.isPropFavorite(property.alias) ? ' orc-fav-favorited': '') + ' alias--' + property.alias + '--';
+                        var buttonHtml = '<a class="' + buttonClass + '"><i class="icon-favorite" style="font-size: 1em"></i></a><span> </span>';                
+                        property.description = buttonHtml + (property.description ? property.description : '');
+                    }
+                });
+            });
+        }
         contentEditingHelper.reBindChangedProperties(editorState.getCurrent(), clonedContent);
+    };
+
+    $scope.doesPropPassFilter = function(view) {
+        var shouldFilter = $scope.model.config.filterByList == "1";
+        var useBlacklist = $scope.model.config.useBlacklist == "1";
+        var permitted = $scope.model.config.permittedEditorViews.split(',');
+        if (!shouldFilter || !permitted) {
+            return true;
+        }
+        var doesPass = useBlacklist;
+        permitted.forEach(function(item) {
+            if (item.split(' ').join('') == view.split(' ').join('')) {
+                doesPass = !doesPass;
+            }
+        });
+        return doesPass;
     };
 
     /**
@@ -141,6 +175,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
                 }
             })
             $scope.favoritedProperties = filtered;
+            $scope.sortFavoritedProperties();
             callback();
         });
     };
@@ -174,6 +209,21 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
     };
 
     /**
+     * Sorts the $scope.favoritedProperties array by its items sortOrder property.
+     */
+    $scope.sortFavoritedProperties = function() {
+        var compare = function(a, b) {
+            if (a.sortOrder < b.sortOrder) {
+                return -1;
+            } else if (a.sortOrder > b.sortOrder) {
+                return 1;
+            }
+            return 0;
+        };
+        $scope.favoritedProperties.sort(compare);
+    };
+
+    /**
      * Iterates through `$scope.favoritedProperties` and updates `$scope.properties`
      * with the values of the matching content node properties.
      * @returns {void} void
@@ -182,7 +232,7 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         var props = contentEditingHelper.getAllProps(editorState.getCurrent());
         $scope.favoritedProperties.forEach(function(fave) {
             props.forEach(function(property) {
-                if (property.alias === fave.name) {
+                if (property.alias === fave.name && $scope.doesPropPassFilter(property.view)) {
                     // Workarounds / fixes
                     property = $scope.fixTagsPropertyWorkaround(property);
                     $scope.properties.push(property);
@@ -200,13 +250,13 @@ function($scope, $http, $timeout, editorState, contentEditingHelper) {
         var alias = $scope.favoritedProperties[index].name;
         var clonedContent = editorState.getCurrent();
         clonedContent.properties.forEach(function(property) {
-            if (property.alias === alias) {
+            if (property.alias === alias && $scope.doesPropPassFilter(property.view)) {
                 property.value = $scope.properties[index].value;
             }
         });
         clonedContent.tabs.forEach(function(tab) {
             tab.properties.forEach(function(property) {
-                if (property.alias === alias) {
+                if (property.alias === alias && $scope.doesPropPassFilter(property.view)) {
                     property.value = $scope.properties[index].value;
                 }
             });

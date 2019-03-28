@@ -1,10 +1,18 @@
 <div ng-controller="favorite.content.controller" class="orc-fav-content-container">
     <div ng-repeat="prop in properties">
-        <div>
-            <div><strong>{{prop.label}}</strong></div>
-            <p ng-bind-html="prop.description"></p>
-            <umb-editor model="prop"></umb-editor>
-            <hr/>
+        <div style="clear:both;">
+            <label class='control-label'>
+                    <div>
+                        <strong>{{prop.label}}</strong>{{' '}}
+                        <!--<a href="#up" ng-click="onSortUpClick($event, prop)"><i class="icon-navigation-up" style="font-size: 1em"></i></a>
+                        <a href="#down" ng-click="onSortDownClick($event, prop)"><i class="icon-navigation-down" style="font-size: 1em"></i></a>-->
+                    </div>
+                    <small ng-bind-html="prop.description"></small>
+            </label>
+            <div style="margin-left: 180px">
+                    <umb-editor model="prop"></umb-editor>
+            </div>
+            <hr style="clear: both;"/>
         </div>
     </div>
 </div>

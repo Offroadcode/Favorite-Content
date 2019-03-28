@@ -180,5 +180,5 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('default', ['concat', 'sass:dist', 'copy:html', 'copy:manifest', 'copy:css', 'clean:html', 'clean:js', 'clean:sass', 'clean:css']);
-  grunt.registerTask('umbraco', ['clean:tmp', 'default', 'copy:umbraco', 'umbracoPackage', 'clean:tmp']);
+  grunt.registerTask('umbraco', ['clean:tmp', 'default', 'msbuild:dist', 'copy:dll', 'copy:umbraco', 'umbracoPackage', 'clean:tmp', ]);
 };
